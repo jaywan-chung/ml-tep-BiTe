@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link href="https://fonts.googleapis.com/css?family=Poppins" rel="stylesheet">
+    <link href="css/app.css" rel="stylesheet">
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <script type="text/javascript" src="ann.js"></script>
+    <script type="text/javascript" src="BiTe-lann.js"></script>
+    <script>
+        window.onload = function() {
+            jcApp.startApp();
+        }
+    </script>
+    <title>TEP Predictor</title>
+</head>
+<body>
+    <section class="title">
+        <div class="container">
+            <h1>Machine Learning Model Predicting<br/>Thermoelectric Properties of<br/>BiTe-based materials ver.0.1a</h1>
+        </div>
+    </section>
+
+    <section class="section">
+        <p class="paragraph">
+            Our website provides a <span style="color: var(--main-color); font-weight: bold;">machine learning model</span> to predict thermoelectric properties of BiTe-based materials (BiSbTe, BiTeSe).
+            The purpose of this website is to demonstrate the excellence of our machine learning model we developed.
+            Therefore, detailed information on the material synthesis process is omitted.
+            <br/>
+
+            You can also find a thermoelectric power generation simulator at <a href="https://jaywan-chung.github.io/teg-sim-lite/" target="_blank" style="color: var(--main-color); font-weight: bold;">our website</a>.
+        </p>
+        <p class="paragraph" style="margin-top: 20px;">
+            Please follow the steps below to predict the material properties.
+        </p>
+        <h2 class="subtitle">Step 1: Choose Material and Composition</h2>
+        <p class="paragraph">
+            The meaning of the composition (x) depends on type:
+            <ul class="paragraph" style="margin-top: 20px; color: var(--main-color); font-weight: bold;">
+                <li>p-type: Bi<sub>x</sub>Sb<sub>2-x</sub>Te<sub>3</sub></li>
+                <li>n-type: Bi<sub>2</sub>Te<sub>3-x</sub>Se<sub>x</sub></li>
+            </ul>
+        </p>
+        <article class="option-group">
+            <h3 class="option-group-title">Scatter Plot: Experiments using SPS (Expt)</h3>
+            <div class="container">
+                <select name="rawdata", id="select-rawdata", size="6"></select>
+            </div>
+            <br>
+        </article>
+        <div class="container">
+            <article class="option-group">
+                <h3 class="option-group-title">Plot 1: Machine Prediction (Pred 1)</h3>
+                <form>
+                    <label class="param-label" for="plot1-type">Type:</label>
+                    <select name="plot1-type" id="plot1-type">
+                        <option value="p-type">p-type</option>
+                        <option value="n-type">n-type</option>
+                    </select>    
+                </form>
+                <form>
+                    <label class="param-label" for="plot1-axis">Axis:</label>
+                    <select name="plot1-axis" id="plot1-axis">
+                        <option value="a-axis">a-axis</option>
+                        <option value="c-axis">c-axis</option>
+                    </select>    
+                </form>
+                <form>
+                    <label class="param-label" for="plot1-composition">x:</label>
+                    <input class="param-input" type="text" id="plot1-composition">
+                    <label class="param-unit-label">[1]</label>
+                </form>
+                <div class="button-container">
+                    <button type="button" id="copy-to-plot1-button">Select from Expt. Data</button>
+                </div>    
+            </article>
+            <article class="option-group">
+                <h3 class="option-group-title">Plot 2: Machine Prediction (Pred 2)</h3>
+                <form>
+                    <label class="param-label" for="plot2-type">Type:</label>
+                    <select name="plot2-type" id="plot2-type">
+                        <option value="p-type">p-type</option>
+                        <option value="n-type">n-type</option>
+                    </select>    
+                </form>
+                <form>
+                    <label class="param-label" for="plot2-axis">Axis:</label>
+                    <select name="plot2-axis" id="plot2-axis">
+                        <option value="a-axis">a-axis</option>
+                        <option value="c-axis">c-axis</option>
+                    </select>    
+                </form>
+                <form>
+                    <label class="param-label" for="plot2-composition">x:</label>
+                    <input class="param-input" type="text" id="plot2-composition" value="0.36">
+                    <label class="param-unit-label">[1]</label>
+                </form>    
+            </article>    
+            <article class="option-group">
+                <h3 class="option-group-title">Show Options</h3>
+                <form>
+                    <label class="param-label" for="show-data">Expt:</label>
+                    <input class="param-input" type="checkbox" id="show-data" name="show-data" checked />
+                </form>
+                <form>
+                    <label class="param-label" for="show-plot1">Pred 1:</label>
+                    <input class="param-input" type="checkbox" id="show-plot1" name="show-plot1" checked />
+                    <label class="param-label" for="show-plot1-ci">Pred 1 CI:</label>
+                    <input class="param-input" type="checkbox" id="show-plot1-ci" name="show-plot1-ci" checked />
+                </form>
+                <form>
+                    <label class="param-label" for="show-plot2">Pred 2:</label>
+                    <input class="param-input" type="checkbox" id="show-plot2" name="show-plot2" checked />
+                    <label class="param-label" for="show-plot2-ci">Pred 2 CI:</label>
+                    <input class="param-input" type="checkbox" id="show-plot2-ci" name="show-plot2-ci" checked />
+                </form>
+            </article>    
+        <div class="button-container">
+            <button type="button" class="selection-button" id="predict-tep">Predict Thermoelectric Properties</button>
+        </div>
+    </section>
+
+    <div class="pagebreak"> </div>
+
+    <section class="section tep-curve">
+        <h2 class="subtitle">Step 2: Check the Thermoelectric Properties</h2>
+        <h2 class="subtitle-print">Regression/Interpolation Methods for Thermoelectric Properties</h2>
+        <p class="paragraph">
+            In the plot, the filled region means <span style="color: var(--main-color); font-weight: bold;">95% CI (confidence interval) of the mean</span>.
+            However, because the synthesis is rarely repeated in this example, the CI has no significant meaning.
+        </p>
+        <h2 class="subtitle-print">Thermoelectric Properties</h2>
+        <div class="chart-container" id="tep-chart-container">
+            <article class="chart">
+                <div id="chart-elec-resi"></div>
+            </article>
+            <article class="chart">
+                <div id="chart-seebeck"></div>
+            </article>
+            <article class="chart">
+                <div id="chart-thrm-cond"></div>
+            </article>
+            <article class="chart">
+                <div id="chart-elec-cond"></div>
+            </article>
+            <article class="chart">
+                <div id="chart-power-factor"></div>
+            </article>
+            <article class="chart">
+                <div id="chart-figure-of-merit"></div>
+            </article>
+        </div>
+        <div class="button-container">
+            <button type="button" class="selection-button" id="copy-formula" disabled >Copy to Clipboard: Not Implemented</button>
+        </div>
+        <div id="tep-table-copy-formula"></div>
+    </section>
+
+    <section class="section acknowledgements">
+        <h2 class="subtitle">Contacts</h2>
+        <!-- for credits -->
+        <ul class="paragraph">
+            <li>Dr. Jaywan Chung: jchung at keri.re.kr | Ext. 1631</li>
+            <li>Dr. Byungki Ryu: byungkiryu at keri.re.kr</li>
+            <li>Dr. SuDong Park: john at keri.re.kr</li>
+        </ul>
+    </section>
+
+    <section class="section acknowledgements">
+        <h2 class="subtitle">Powered by</h2>
+        <!-- for credits -->
+        <ul class="paragraph">
+            <li><a href="https://fonts.google.com/" target="_blank">Google Fonts</a>: <em>Poppins</em> font</li>
+            <li><a href="https://developers.google.com/chart/" target="_blank">Google Charts</a>: Graphs</li>
+        </ul>
+    </section>
+
+    <footer class="footer">
+        <div class="container">
+            <section class="footer-keri-info">
+                <div class="left-col">
+                    <a href="https://www.keri.re.kr/html/en/" target="_blank">
+                        <img src="images/KERI-logo-with-eng.png">
+                    </a>
+                </div>
+                <div class="right-col">
+                    <p>Energy Conversion Research Center, Korea Electrotechnology Research Institute (KERI)</p>
+                    <address>12, Bulmosan-ro 10beon-gil, Seongsan-gu, Changwon-si, Gyeongsangnam-do, 51543 South Korea</address>
+                    <p>Copyright &copy; 2023 KERI. All rights reserved.</p>
+                </div>
+            </section>
+        </div>
+    </footer>
+
+</body>
+</html>
