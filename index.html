@@ -19,18 +19,19 @@
 <body>
     <section class="title">
         <div class="container">
-            <h1>Machine Learning Model Predicting<br/>Thermoelectric Properties of<br/>BiTe-based materials ver.0.1a</h1>
+            <h1>Machine Learning Model Predicting<br/>Thermoelectric Properties of<br/>BiTe-based materials ver.0.2a</h1>
         </div>
     </section>
 
     <section class="section">
         <p class="paragraph">
-            Our website provides a <span style="color: var(--main-color); font-weight: bold;">machine learning model</span> to predict thermoelectric properties of BiTe-based materials (BiSbTe, BiTeSe).
-            The purpose of this website is to demonstrate the excellence of our machine learning model we developed.
+            This website provides a <strong style="color: var(--main-color);">machine learning model</strong> to predict thermoelectric properties of BiTe-based materials (BiSbTe, BiTeSe).
+            The purpose of this website is to demonstrate the excellence of the machine learning model we developed.
             Therefore, detailed information on the material synthesis process is omitted.
             <br/>
 
-            You can also find a thermoelectric power generation simulator at <a href="https://jaywan-chung.github.io/teg-sim-lite/" target="_blank" style="color: var(--main-color); font-weight: bold;">our website</a>.
+            You can also find a thermoelectric power generation simulator on  
+            <a href="https://jaywan-chung.github.io/teg-sim-lite/" target="_blank" style="color: var(--main-color); font-weight: bold;">our web simulator</a>.
         </p>
         <p class="paragraph" style="margin-top: 20px;">
             Please follow the steps below to predict the material properties.
@@ -38,92 +39,97 @@
         <h2 class="subtitle">Step 1: Choose Material and Composition</h2>
         <p class="paragraph">
             The meaning of the composition (x) depends on type:
-            <ul class="paragraph" style="margin-top: 20px; color: var(--main-color); font-weight: bold;">
-                <li>p-type: Bi<sub>x</sub>Sb<sub>2-x</sub>Te<sub>3</sub></li>
-                <li>n-type: Bi<sub>2</sub>Te<sub>3-x</sub>Se<sub>x</sub></li>
+            <ul class="paragraph" style="margin-top: 20px; color: var(--main-color);">
+                <li><strong>p-type: Bi<sub>x</sub>Sb<sub>2-x</sub>Te<sub>3</sub></strong></li>
+                <li><strong>n-type: Bi<sub>2</sub>Te<sub>3-x</sub>Se<sub>x</sub></strong></li>
             </ul>
         </p>
         <div class="container">
-            <article class="option-group">
-                <fieldset style="text-align: center;">
-                    <legend class="option-group-title">Scatter Plot: Experiments using SPS (Expt)</legend>
-                        <select name="rawdata", id="select-rawdata", size="6"></select>
-                </fieldset>
-            </article>
+            <fieldset class="option-group" style="text-align: center;">
+                <legend class="option-group-title">Scatter Plot: Experiments using SPS (Expt)</legend>
+                <form>
+                    <select name="rawdata", id="select-rawdata", size="6"></select>
+                </form>
+            </fieldset>
         </div>
         <div class="container">
-            <article class="option-group">
-                <fieldset style="height: 235px;">
-                    <legend class="option-group-title">Plot 1: Machine Prediction (Pred 1)</legend>
-                    <form>
-                        <label class="param-label" for="plot1-type">Type:</label>
-                        <select name="plot1-type" id="plot1-type">
-                            <option value="p-type">p-type</option>
-                            <option value="n-type">n-type</option>
-                        </select>    
-                    </form>
-                    <form>
-                        <label class="param-label" for="plot1-axis">Axis:</label>
-                        <select name="plot1-axis" id="plot1-axis">
-                            <option value="a-axis">a-axis</option>
-                            <option value="c-axis">c-axis</option>
-                        </select>    
-                    </form>
-                    <form>
-                        <label class="param-label" for="plot1-composition">x:</label>
-                        <input class="param-input" type="text" id="plot1-composition">
-                        <label class="param-unit-label">[1]</label>
-                    </form>
-                    <div class="button-container">
-                        <button type="button" id="copy-to-plot1-button">Select from Expt. Data</button>
-                    </div>        
-                </fieldset>
-            </article>
-            <article class="option-group">
-                <fieldset style="height: 235px;">
-                    <legend class="option-group-title">Plot 2: Machine Prediction (Pred 2)</legend>
-                    <form>
-                        <label class="param-label" for="plot2-type">Type:</label>
-                        <select name="plot2-type" id="plot2-type">
-                            <option value="p-type">p-type</option>
-                            <option value="n-type">n-type</option>
-                        </select>    
-                    </form>
-                    <form>
-                        <label class="param-label" for="plot2-axis">Axis:</label>
-                        <select name="plot2-axis" id="plot2-axis">
-                            <option value="a-axis">a-axis</option>
-                            <option value="c-axis">c-axis</option>
-                        </select>    
-                    </form>
-                    <form>
-                        <label class="param-label" for="plot2-composition">x:</label>
-                        <input class="param-input" type="text" id="plot2-composition" value="0.36">
-                        <label class="param-unit-label">[1]</label>
-                    </form>    
-                </fieldset>
-            </article>    
-            <article class="option-group">
-                <fieldset style="height: 235px;">
-                    <legend class="option-group-title">Show Options</legend>
-                    <form>
+            <fieldset class="option-group">
+                <legend class="option-group-title">Plot 1: Machine Prediction (Pred 1)</legend>
+                <form>
+                    <label class="param-label" for="plot1-type">Type:</label>
+                    <select class="param-input" name="plot1-type" id="plot1-type">
+                        <option value="p-type">p-type</option>
+                        <option value="n-type">n-type</option>
+                    </select>    
+                </form>
+                <form>
+                    <label class="param-label" for="plot1-axis">Axis:</label>
+                    <select class="param-input" name="plot1-axis" id="plot1-axis">
+                        <option value="a-axis">a-axis</option>
+                        <option value="c-axis">c-axis</option>
+                    </select>    
+                </form>
+                <form>
+                    <label class="param-label" for="plot1-composition">x:</label>
+                    <input class="param-input" type="number" id="plot1-composition">
+                </form>
+                <div class="button-container">
+                    <button type="button" id="copy-to-plot1-button">Select from Expt. Data</button>
+                </div>        
+            </fieldset>
+            <fieldset class="option-group">
+                <legend class="option-group-title">Plot 2: Machine Prediction (Pred 2)</legend>
+                <form>
+                    <label class="param-label" for="plot2-type">Type:</label>
+                    <select class="param-input" name="plot2-type" id="plot2-type">
+                        <option value="p-type">p-type</option>
+                        <option value="n-type">n-type</option>
+                    </select>    
+                </form>
+                <form>
+                    <label class="param-label" for="plot2-axis">Axis:</label>
+                    <select class="param-input" name="plot2-axis" id="plot2-axis">
+                        <option value="a-axis">a-axis</option>
+                        <option value="c-axis">c-axis</option>
+                    </select>    
+                </form>
+                <form>
+                    <label class="param-label" for="plot2-composition">x:</label>
+                    <input class="param-input" type="number" id="plot2-composition" value="0.36">
+                </form>    
+            </fieldset>
+            <fieldset class="option-group">
+                <legend class="option-group-title">Show Options</legend>
+                <form>
+                    <fieldset style="padding: 0;">
                         <label class="param-label" for="show-data">Expt:</label>
-                        <input class="param-input" type="checkbox" id="show-data" name="show-data" checked />
-                    </form>
-                    <form>
+                        <input class="param-input" type="checkbox" id="show-data" name="show-data" checked />    
+                    </fieldset>
+                </form>
+                <form>
+                    <fieldset style="padding: 0;">
                         <label class="param-label" for="show-plot1">Pred 1:</label>
-                        <input class="param-input" type="checkbox" id="show-plot1" name="show-plot1" checked />
-                        <label class="param-label" for="show-plot1-ci">Pred 1 CI:</label>
-                        <input class="param-input" type="checkbox" id="show-plot1-ci" name="show-plot1-ci" checked />
-                    </form>
-                    <form>
+                        <input class="param-input" type="checkbox" id="show-plot1" name="show-plot1" checked /><br/>
+                        <label class="param-label">CI:</label>
+                        <input type="checkbox" id="show-plot1-tep-ci" name="show-plot1-tep-ci" checked />
+                        <label for="show-plot1-tep-ci">TEP</label>
+                        <input type="checkbox" id="show-plot1-zT-ci" name="show-plot1-zT-ci"/>
+                        <label for="show-plot1-zT-ci">PF & zT</label>
+                    </fieldset>
+                </form>
+                <form>
+                    <fieldset style="padding: 0;">
                         <label class="param-label" for="show-plot2">Pred 2:</label>
                         <input class="param-input" type="checkbox" id="show-plot2" name="show-plot2" checked />
-                        <label class="param-label" for="show-plot2-ci">Pred 2 CI:</label>
-                        <input class="param-input" type="checkbox" id="show-plot2-ci" name="show-plot2-ci" checked />
-                    </form>
-                </fieldset>
-            </article>    
+                        <label class="param-label">CI:</label>
+                        <input type="checkbox" id="show-plot2-tep-ci" name="show-plot2-tep-ci" checked />
+                        <label for="show-plot2-tep-ci">TEP</label>
+                        <input type="checkbox" id="show-plot2-zT-ci" name="show-plot2-zT-ci"/>
+                        <label for="show-plot2-zT-ci">PF & zT</label>
+                    </fieldset>
+                </form>
+            </fieldset>
+        </div>
         <div class="button-container">
             <button type="button" class="selection-button" id="predict-tep">Predict Thermoelectric Properties</button>
         </div>
@@ -159,10 +165,22 @@
                 <div id="chart-figure-of-merit"></div>
             </article>
         </div>
-        <div class="button-container">
-            <button type="button" class="selection-button" id="copy-formula" disabled >Copy to Clipboard: Not Implemented</button>
-        </div>
-        <div id="tep-table-copy-formula"></div>
+    </section>
+
+    <section class="section methods">
+        <h2 class="subtitle">Methods</h2>
+        <!-- for credits -->
+        <ul class="paragraph">
+            <li>
+                Machine learning model: We use an <strong style="color: var(--main-color);">artificial neural network</strong>. We designed a special architecture for the prediction of physical property curves.
+                The details will be made public in the near future.
+            </li>
+            <li>
+                CI prediction: We use a method that estimates the mean and the variance of the material properties,
+                assuming that electrical resistivity, Seebeck coefficient, and thermal conductivity have an error of normal distribution.
+                For details, refer to <a href="https://ieeexplore.ieee.org/document/374138" target="_blank">Nix and Weigend (1994)</a>.    
+            </li>
+        </ul>
     </section>
 
     <section class="section acknowledgements">

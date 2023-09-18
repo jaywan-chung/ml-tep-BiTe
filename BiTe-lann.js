@@ -1,12 +1,13 @@
 // Construct Problem-specific Aritifical Neural Networks.
 // This is for prediction of thermoelectric properties of BiTe-based materials.
 // Programmed by Dr. Jaywan Chung
-// v0.1 updated on Sep 14, 2023
+// v0.2a updated on Sep 17, 2023
 
 "use strict";
 
 const jcApp = {
     chartHeight: 500,
+    chartWidth: 500,
     minTemp: 0,
     maxTemp: 300,
     nTempNodes: 100,
@@ -43,7 +44,6 @@ class BiTeMeanLann {
         this.outputMatrix.array[2] = Math.log(Math.exp(y2) + 1);
     }
 }
-
 class BiTeLann {
     constructor(embeddingNet, meanDictionaryNet, stdDictionaryNet) {
         this.meanLann = new LatentSpaceNeuralNetwork(embeddingNet, meanDictionaryNet);
@@ -100,6 +100,12 @@ jcApp.startApp = function() {
 
     google.charts.load('current', {'packages':['corechart']});
     google.charts.setOnLoadCallback(jcApp.activateChartsAndButtons); // activate buttons when google charts is loaded.
+
+    // adjust style for mobile
+    if (window.innerWidth <= 768) {
+        jcApp.chartWidth = window.innerWidth * 0.9;
+        jcApp.chartHeight = window.innerWidth * 0.9;
+    }
 }
 
 jcApp.initSelectRawdata = function() {
@@ -118,7 +124,6 @@ jcApp.initSelectRawdata = function() {
     jcApp.onClickCopyToPlot1Button();
     console.log("'Select Data' initialized.");
 }
-
 jcApp.onClickCopyToPlot1Button = function() {
     let dataName = jcApp.select.value;
     if (!dataName) return;  // if not selected, do nothing.
@@ -135,7 +140,6 @@ jcApp.onClickCopyToPlot1Button = function() {
         document.getElementById("plot1-axis").value = "c-axis";
     }
 }
-
 jcApp.activateChartsAndButtons = function() {
     jcApp.initTepCharts();
 
@@ -144,7 +148,6 @@ jcApp.activateChartsAndButtons = function() {
         jcApp.drawCharts();    
     });
 }
-
 jcApp.predict = function() {
     jcApp.clearPrediction();
 
@@ -211,7 +214,6 @@ jcApp.predict = function() {
     }
     console.log("Prediction complete.");
 }
-
 jcApp.clearPrediction = function() {
     jcApp.plot1Input.fill(NaN);
     jcApp.plot1ElecResiArray.fill(NaN);
@@ -230,15 +232,15 @@ jcApp.clearPrediction = function() {
 
     console.log("Prediction cleared.");
 }
-
 jcApp.checkShowOptions = function() {
     jcApp.showData = document.getElementById("show-data").checked;
     jcApp.showPlot1 = document.getElementById("show-plot1").checked;
-    jcApp.showPlot1Ci = document.getElementById("show-plot1-ci").checked;
+    jcApp.showPlot1TepCi = document.getElementById("show-plot1-tep-ci").checked;
+    jcApp.showPlot1zTCi = document.getElementById("show-plot1-zT-ci").checked;
     jcApp.showPlot2 = document.getElementById("show-plot2").checked;
-    jcApp.showPlot2Ci = document.getElementById("show-plot2-ci").checked;
+    jcApp.showPlot2TepCi = document.getElementById("show-plot2-tep-ci").checked;
+    jcApp.showPlot2zTCi = document.getElementById("show-plot2-zT-ci").checked;
 }
-
 jcApp.initTepCharts = function() {
     jcApp.chartElecResi = new google.visualization.ComboChart(document.getElementById('chart-elec-resi'));
     jcApp.chartSeebeck = new google.visualization.ComboChart(document.getElementById('chart-seebeck'));
@@ -258,16 +260,11 @@ jcApp.drawCharts = function() {
     jcApp.drawPowerFactorChart();
     jcApp.drawFigureOfMeritChart();
 }
-
-jcApp.drawElecResiChart = function() {
-    const chart = jcApp.chartElecResi;
+jcApp.drawTepChart = function(chart, yLabel, yScale, getTepData, getPlot1TepAndCi, getPlot2TepAndCi) {
     const xLabel = "Temperature (°C)";
-    const yLabel = "Electrical resistivity (mΩ cm)";
-    const yScale = 1e5;  // [mΩ cm]
-    const selectedDataName = jcApp.select.value;
 
     let data = new google.visualization.DataTable();
-    data.addColumn('number', xLabel); 
+    data.addColumn('number', xLabel);
     data.addColumn('number', jcApp.dataLegend);
     data.addColumn('number', jcApp.plot1Legend);
     data.addColumn({type: 'number', role: 'interval'});
@@ -276,31 +273,32 @@ jcApp.drawElecResiChart = function() {
     data.addColumn({type: 'number', role: 'interval'});
     data.addColumn({type: 'number', role: 'interval'});
 
-    if(selectedDataName && jcApp.showData) {
-        let tempData = jcApp.rawdata[selectedDataName]["temperature [degC]"];
-        let tepData = jcApp.rawdata[selectedDataName]["electrical_resistivity [Ohm m]"];    
+    let [tempData, tepData] = getTepData();
+    if(jcApp.showData && (tempData !== null) && (tepData !== null)) {
         for(let i=0; i<tempData.length; i++) {
             data.addRow([tempData[i], tepData[i]*yScale, NaN, NaN, NaN, NaN, NaN, NaN]);
-        }    
+        }
     }
-    let plot1Tep, plot1Std, plot2Tep, plot2Std;
+    let plot1Tep, plot1TepMin, plot1TepMax, plot2Tep, plot2TepMin, plot2TepMax;
     for(let i=0; i<jcApp.nTempNodes; i++) {
-        plot1Tep = plot1Std = plot2Tep = plot2Std = NaN;
-        if(jcApp.showPlot1) {
-            plot1Tep = jcApp.plot1ElecResiArray[i]*yScale;
+        [plot1Tep, plot1TepMin, plot1TepMax] = getPlot1TepAndCi(i);
+        [plot2Tep, plot2TepMin, plot2TepMax] = getPlot2TepAndCi(i);
+        plot1Tep *= yScale;
+        plot1TepMin *= yScale;
+        plot1TepMax *= yScale;
+        plot2Tep *= yScale;
+        plot2TepMin *= yScale;
+        plot2TepMax *= yScale;
+        if(!jcApp.showPlot1) {
+            plot1Tep = NaN;
         }
-        if(jcApp.showPlot1Ci) {
-            plot1Std = jcApp.plot1ElecResiStdArray[i]*yScale;
+        if(!jcApp.showPlot2) {
+            plot2Tep = NaN;
         }
-        if(jcApp.showPlot2) {
-            plot2Tep = jcApp.plot2ElecResiArray[i]*yScale;
-        }
-        if(jcApp.showPlot2Ci) {
-            plot2Std = jcApp.plot2ElecResiStdArray[i]*yScale;
-        }
+
         data.addRow([jcApp.tempArray[i], NaN, 
-            plot1Tep, plot1Tep-1.96*plot1Std, plot1Tep+1.96*plot1Std,
-            plot2Tep, plot2Tep-1.96*plot2Std, plot2Tep+1.96*plot2Std]);
+            plot1Tep, plot1TepMin, plot1TepMax,
+            plot2Tep, plot2TepMin, plot2TepMax]);
     }
 
     let options = {
@@ -314,300 +312,260 @@ jcApp.drawElecResiChart = function() {
       intervals: { style: 'area' },
       colors: [jcApp.colorRawData, jcApp.colorPlot1, jcApp.colorPlot2],
       height: jcApp.chartHeight,
+      width: jcApp.chartWidth,
     };
   
     chart.draw(data, options);
+}
+jcApp.getTepData = function(rawdataName) {
+    const selectedDataName = jcApp.select.value;
+    let tempData = null;
+    let tepData = null;
+    if (selectedDataName) {
+        tempData = jcApp.rawdata[selectedDataName]["temperature [degC]"];
+        tepData = jcApp.rawdata[selectedDataName][rawdataName];    
+    }
+    return [tempData, tepData];
+}
+jcApp.getElecResiData = function() {
+    return jcApp.getTepData("electrical_resistivity [Ohm m]");
+}
+jcApp.getSeebeckData = function() {
+    return jcApp.getTepData("Seebeck_coefficient [V/K]");
+}
+jcApp.getThrmCondData = function() {
+    return jcApp.getTepData("thermal_conductivity [W/m/K]");
+}
+jcApp.drawElecResiChart = function() {
+    function getFuncTepAndCiForPlot(plotNum) {
+        const func = function getPlotTepAndCi(i) {
+            let tep, std, showCi;
+            if (plotNum == 1) {
+                tep = jcApp.plot1ElecResiArray[i];
+                std = jcApp.plot1ElecResiStdArray[i];
+                showCi = jcApp.showPlot1TepCi;
+            } else if (plotNum == 2) {
+                tep = jcApp.plot2ElecResiArray[i];
+                std = jcApp.plot2ElecResiStdArray[i];
+                showCi = jcApp.showPlot2TepCi;
+            } else {
+                throw new Error("Invalid Plot Number!");
+            }
+            let tepMin = tep - 1.96*std;
+            let tepMax = tep + 1.96*std;
+            // Do not draw CI if user wanted, or positivity is violated
+            if((!showCi) || (tepMin < 0)) {
+                tepMin = NaN;
+                tepMax = NaN;
+            }
+            return [tep, tepMin, tepMax];    
+        };
+        return func;
+    };
+
+    jcApp.drawTepChart(jcApp.chartElecResi, "Electrical resistivity (mΩ cm)", 1e5, jcApp.getElecResiData, getFuncTepAndCiForPlot(1), getFuncTepAndCiForPlot(2));
 };
 jcApp.drawSeebeckChart = function() {
-    const chart = jcApp.chartSeebeck;
-    const xLabel = "Temperature (°C)";
-    const yLabel = "Seebeck coefficient (μV/K)";
-    const yScale = 1e6;  // [μV/K]
-    const selectedDataName = jcApp.select.value;
-
-    let data = new google.visualization.DataTable();
-    data.addColumn('number', xLabel); 
-    data.addColumn('number', jcApp.dataLegend);
-    data.addColumn('number', jcApp.plot1Legend);
-    data.addColumn({type: 'number', role: 'interval'});
-    data.addColumn({type: 'number', role: 'interval'});
-    data.addColumn('number', jcApp.plot2Legend);
-    data.addColumn({type: 'number', role: 'interval'});
-    data.addColumn({type: 'number', role: 'interval'});
-
-    if(selectedDataName && jcApp.showData) {
-        let tempData = jcApp.rawdata[selectedDataName]["temperature [degC]"];
-        let tepData = jcApp.rawdata[selectedDataName]["Seebeck_coefficient [V/K]"];
-        for(let i=0; i<tempData.length; i++) {
-            data.addRow([tempData[i], tepData[i]*yScale, NaN, NaN, NaN, NaN, NaN, NaN]);
-        }    
-    }
-    let plot1Tep, plot1Std, plot2Tep, plot2Std;
-    for(let i=0; i<jcApp.nTempNodes; i++) {
-        plot1Tep = plot1Std = plot2Tep = plot2Std = NaN;
-        if(jcApp.showPlot1) {
-            plot1Tep = jcApp.plot1SeebeckArray[i]*yScale;
-        }
-        if(jcApp.showPlot1Ci) {
-            plot1Std = jcApp.plot1SeebeckStdArray[i]*yScale;
-        }
-        if(jcApp.showPlot2) {
-            plot2Tep = jcApp.plot2SeebeckArray[i]*yScale;
-        }
-        if(jcApp.showPlot2Ci) {
-            plot2Std = jcApp.plot2SeebeckStdArray[i]*yScale;
-        }
-        data.addRow([jcApp.tempArray[i], NaN, 
-            plot1Tep, plot1Tep-1.96*plot1Std, plot1Tep+1.96*plot1Std,
-            plot2Tep, plot2Tep-1.96*plot2Std, plot2Tep+1.96*plot2Std]);
-    }
-
-    let options = {
-      seriesType: 'line',
-      series: {0: {type: 'scatter'}},
-      title: yLabel,
-      titleTextStyle: {bold: true, fontSize: 20,},
-      hAxis: {title: xLabel, titleTextStyle: {italic: false, fontSize: 15,},},
-      vAxis: {title: yLabel, titleTextStyle: {italic: false, fontSize: 15,},},
-      legend: { position: 'bottom', alignment: 'center' },
-      intervals: { style: 'area' },
-      colors: [jcApp.colorRawData, jcApp.colorPlot1, jcApp.colorPlot2],
-      height: jcApp.chartHeight,
+    function getFuncTepAndCiForPlot(plotNum) {
+        const func = function getPlotTepAndCi(i) {
+            let tep, std, showCi;
+            if (plotNum == 1) {
+                tep = jcApp.plot1SeebeckArray[i];
+                std = jcApp.plot1SeebeckStdArray[i];
+                showCi = jcApp.showPlot1TepCi;
+            } else if (plotNum == 2) {
+                tep = jcApp.plot2SeebeckArray[i];
+                std = jcApp.plot2SeebeckStdArray[i];
+                showCi = jcApp.showPlot2TepCi;
+            } else {
+                throw new Error("Invalid Plot Number!");
+            }
+            let tepMin = tep - 1.96*std;
+            let tepMax = tep + 1.96*std;
+            // Do not draw CI if user wanted
+            if(!showCi) {
+                tepMin = NaN;
+                tepMax = NaN;
+            }
+            return [tep, tepMin, tepMax];    
+        };
+        return func;
     };
-  
-    chart.draw(data, options);
+    
+    jcApp.drawTepChart(jcApp.chartSeebeck, "Seebeck coefficient (μV/K)", 1e6, jcApp.getSeebeckData, getFuncTepAndCiForPlot(1), getFuncTepAndCiForPlot(2));
 };
 jcApp.drawThrmCondChart = function() {
-    const chart = jcApp.chartThrmCond;
-    const xLabel = "Temperature (°C)";
-    const yLabel = "Thermal conductivity (W/m/K)";
-    const yScale = 1;  // [W/m/K]
-    const selectedDataName = jcApp.select.value;
-
-    let data = new google.visualization.DataTable();
-    data.addColumn('number', xLabel); 
-    data.addColumn('number', jcApp.dataLegend);
-    data.addColumn('number', jcApp.plot1Legend);
-    data.addColumn({type: 'number', role: 'interval'});
-    data.addColumn({type: 'number', role: 'interval'});
-    data.addColumn('number', jcApp.plot2Legend);
-    data.addColumn({type: 'number', role: 'interval'});
-    data.addColumn({type: 'number', role: 'interval'});
-
-    if(selectedDataName && jcApp.showData) {
-        let tempData = jcApp.rawdata[selectedDataName]["temperature [degC]"];
-        let tepData = jcApp.rawdata[selectedDataName]["thermal_conductivity [W/m/K]"];
-        for(let i=0; i<tempData.length; i++) {
-            data.addRow([tempData[i], tepData[i]*yScale, NaN, NaN, NaN, NaN, NaN, NaN]);
-        }    
-    }
-    let plot1Tep, plot1Std, plot2Tep, plot2Std;
-    for(let i=0; i<jcApp.nTempNodes; i++) {
-        plot1Tep = plot1Std = plot2Tep = plot2Std = NaN;
-        if(jcApp.showPlot1) {
-            plot1Tep = jcApp.plot1ThrmCondArray[i]*yScale;
-        }
-        if(jcApp.showPlot1Ci) {
-            plot1Std = jcApp.plot1ThrmCondStdArray[i]*yScale;
-        }
-        if(jcApp.showPlot2) {
-            plot2Tep = jcApp.plot2ThrmCondArray[i]*yScale;
-        }
-        if(jcApp.showPlot2Ci) {
-            plot2Std = jcApp.plot2ThrmCondStdArray[i]*yScale;
-        }
-        data.addRow([jcApp.tempArray[i], NaN, 
-            plot1Tep, plot1Tep-1.96*plot1Std, plot1Tep+1.96*plot1Std,
-            plot2Tep, plot2Tep-1.96*plot2Std, plot2Tep+1.96*plot2Std]);
-    }
-
-    let options = {
-      seriesType: 'line',
-      series: {0: {type: 'scatter'}},
-      title: yLabel,
-      titleTextStyle: {bold: true, fontSize: 20,},
-      hAxis: {title: xLabel, titleTextStyle: {italic: false, fontSize: 15,},},
-      vAxis: {title: yLabel, titleTextStyle: {italic: false, fontSize: 15,},},
-      legend: { position: 'bottom', alignment: 'center' },
-      intervals: { style: 'area' },
-      colors: [jcApp.colorRawData, jcApp.colorPlot1, jcApp.colorPlot2],
-      height: jcApp.chartHeight,
+    function getFuncTepAndCiForPlot(plotNum) {
+        const func = function getPlotTepAndCi(i) {
+            let tep, std, showCi;
+            if (plotNum == 1) {
+                tep = jcApp.plot1ThrmCondArray[i];
+                std = jcApp.plot1ThrmCondStdArray[i];
+                showCi = jcApp.showPlot1TepCi;
+            } else if (plotNum == 2) {
+                tep = jcApp.plot2ThrmCondArray[i];
+                std = jcApp.plot2ThrmCondStdArray[i];
+                showCi = jcApp.showPlot2TepCi;
+            } else {
+                throw new Error("Invalid Plot Number!");
+            }
+            let tepMin = tep - 1.96*std;
+            let tepMax = tep + 1.96*std;
+            // Do not draw CI if user wanted or positivity is violated
+            if((!showCi) || (tepMin < 0)) {
+                tepMin = NaN;
+                tepMax = NaN;
+            }
+            return [tep, tepMin, tepMax];    
+        };
+        return func;
     };
-  
-    chart.draw(data, options);
+
+    jcApp.drawTepChart(jcApp.chartThrmCond, "Thermal conductivity (W/m/K)", 1, jcApp.getThrmCondData, getFuncTepAndCiForPlot(1), getFuncTepAndCiForPlot(2));
 };
 jcApp.drawElecCondChart = function() {
-    const chart = jcApp.chartElecCond;
-    const xLabel = "Temperature (°C)";
-    const yLabel = "Electrical conductivity (S/cm)";
-    const yScale = 1e-2;  // [S/cm]
-    const selectedDataName = jcApp.select.value;
-
-    let data = new google.visualization.DataTable();
-    data.addColumn('number', xLabel); 
-    data.addColumn('number', jcApp.dataLegend);
-    data.addColumn('number', jcApp.plot1Legend);
-    data.addColumn({type: 'number', role: 'interval'});
-    data.addColumn({type: 'number', role: 'interval'});
-    data.addColumn('number', jcApp.plot2Legend);
-    data.addColumn({type: 'number', role: 'interval'});
-    data.addColumn({type: 'number', role: 'interval'});
-
-    if(selectedDataName && jcApp.showData) {
-        let tempData = jcApp.rawdata[selectedDataName]["temperature [degC]"];
-        let tepData = jcApp.rawdata[selectedDataName]["electrical_resistivity [Ohm m]"];    
-        for(let i=0; i<tempData.length; i++) {
-            data.addRow([tempData[i], (1/tepData[i])*yScale, NaN, NaN, NaN, NaN, NaN, NaN]);
-        }    
-    }
-    let plot1Tep, plot1Std, plot2Tep, plot2Std;
-    for(let i=0; i<jcApp.nTempNodes; i++) {
-        plot1Tep = plot1Std = plot2Tep = plot2Std = NaN;
-        if(jcApp.showPlot1) {
-            plot1Tep = (1/jcApp.plot1ElecResiArray[i])*yScale;
-        }
-        if(jcApp.showPlot1Ci) {
-            // plot1Std = jcApp.plot1ElecResiStdArray[i]*yScale;
-        }
-        if(jcApp.showPlot2) {
-            plot2Tep = (1/jcApp.plot2ElecResiArray[i])*yScale;
-        }
-        if(jcApp.showPlot2Ci) {
-            // plot2Std = jcApp.plot2ElecResiStdArray[i]*yScale;
-        }
-        data.addRow([jcApp.tempArray[i], NaN, 
-            plot1Tep, plot1Tep-1.96*plot1Std, plot1Tep+1.96*plot1Std,
-            plot2Tep, plot2Tep-1.96*plot2Std, plot2Tep+1.96*plot2Std]);
-    }
-
-    let options = {
-      seriesType: 'line',
-      series: {0: {type: 'scatter'}},
-      title: yLabel,
-      titleTextStyle: {bold: true, fontSize: 20,},
-      hAxis: {title: xLabel, titleTextStyle: {italic: false, fontSize: 15,},},
-      vAxis: {title: yLabel, titleTextStyle: {italic: false, fontSize: 15,},},
-      legend: { position: 'bottom', alignment: 'center' },
-      intervals: { style: 'area' },
-      colors: [jcApp.colorRawData, jcApp.colorPlot1, jcApp.colorPlot2],
-      height: jcApp.chartHeight,
+    function getElecCondData() {
+        const [tempData, elecResiData] = jcApp.getElecResiData();
+        const elecCondData = elecResiData.map((x) => 1/x);
+        return [tempData, elecCondData];
     };
-  
-    chart.draw(data, options);
+    function getFuncTepAndCiForPlot(plotNum) {
+        const func = function getPlotTepAndCi(i) {
+            let elecResiTep, elecResiStd, showCi;
+            if (plotNum == 1) {
+                elecResiTep = jcApp.plot1ElecResiArray[i];
+                elecResiStd = jcApp.plot1ElecResiStdArray[i];
+                showCi = jcApp.showPlot1TepCi;
+            } else if (plotNum == 2) {
+                elecResiTep = jcApp.plot2ElecResiArray[i];
+                elecResiStd = jcApp.plot2ElecResiStdArray[i];
+                showCi = jcApp.showPlot2TepCi;
+            } else {
+                throw new Error("Invalid Plot Number!");
+            }
+            let elecResiMin = elecResiTep - 1.96*elecResiStd;
+            let elecResiMax = elecResiTep + 1.96*elecResiStd;
+            // Do not draw CI if user wanted, or positivity is violated
+            if((!showCi) || (elecResiMin < 0)) {
+                elecResiMin = NaN;
+                elecResiMax = NaN;
+            }
+            return [1/elecResiTep, 1/elecResiMax, 1/elecResiMin];
+        };
+        return func;
+    };
+
+    jcApp.drawTepChart(jcApp.chartElecCond, "Electrical conductivity (S/cm)", 1e-2, getElecCondData, getFuncTepAndCiForPlot(1), getFuncTepAndCiForPlot(2));
 };
 jcApp.drawPowerFactorChart = function() {
-    const chart = jcApp.chartPowerFactor;
-    const xLabel = "Temperature (°C)";
-    const yLabel = "Power factor (mW/m/K\u00B2)";  // [mW/m/K^2]
-    const yScale = 1e3;  // [mW/m/K^2]
-    const selectedDataName = jcApp.select.value;
-
-    let data = new google.visualization.DataTable();
-    data.addColumn('number', xLabel); 
-    data.addColumn('number', jcApp.dataLegend);
-    data.addColumn('number', jcApp.plot1Legend);
-    data.addColumn({type: 'number', role: 'interval'});
-    data.addColumn({type: 'number', role: 'interval'});
-    data.addColumn('number', jcApp.plot2Legend);
-    data.addColumn({type: 'number', role: 'interval'});
-    data.addColumn({type: 'number', role: 'interval'});
-
-    if(selectedDataName && jcApp.showData) {
-        let tempData = jcApp.rawdata[selectedDataName]["temperature [degC]"];
-        let elecResiData = jcApp.rawdata[selectedDataName]["electrical_resistivity [Ohm m]"];
-        let seebeckData = jcApp.rawdata[selectedDataName]["Seebeck_coefficient [V/K]"];
-        let powerFactor;
-        for(let i=0; i<tempData.length; i++) {
-            powerFactor = seebeckData[i]*seebeckData[i]/elecResiData[i];
-            data.addRow([tempData[i], powerFactor*yScale, NaN, NaN, NaN, NaN, NaN, NaN]);
-        }    
-    }
-    let plot1Tep, plot1Std, plot2Tep, plot2Std;
-    for(let i=0; i<jcApp.nTempNodes; i++) {
-        plot1Tep = plot1Std = plot2Tep = plot2Std = NaN;
-        if(jcApp.showPlot1) {
-            plot1Tep = jcApp.plot1SeebeckArray[i]*jcApp.plot1SeebeckArray[i]/jcApp.plot1ElecResiArray[i]*yScale;
-        }
-        if(jcApp.showPlot2) {
-            plot2Tep = jcApp.plot2SeebeckArray[i]*jcApp.plot2SeebeckArray[i]/jcApp.plot2ElecResiArray[i]*yScale;
-        }
-        data.addRow([jcApp.tempArray[i], NaN, 
-            plot1Tep, plot1Tep-1.96*plot1Std, plot1Tep+1.96*plot1Std,
-            plot2Tep, plot2Tep-1.96*plot2Std, plot2Tep+1.96*plot2Std]);
-    }
-
-    let options = {
-      seriesType: 'line',
-      series: {0: {type: 'scatter'}},
-      title: yLabel,
-      titleTextStyle: {bold: true, fontSize: 20,},
-      hAxis: {title: xLabel, titleTextStyle: {italic: false, fontSize: 15,},},
-      vAxis: {title: yLabel, titleTextStyle: {italic: false, fontSize: 15,},},
-      legend: { position: 'bottom', alignment: 'center' },
-      intervals: { style: 'area' },
-      colors: [jcApp.colorRawData, jcApp.colorPlot1, jcApp.colorPlot2],
-      height: jcApp.chartHeight,
+    function getPowerFactorData() {
+        const [tempData, elecResiData] = jcApp.getElecResiData();
+        const [, seebeckData] = jcApp.getSeebeckData();
+        const powerFactorData = seebeckData.map(function(seebeck, i) {
+            return seebeck*seebeck / elecResiData[i];
+        });
+        return [tempData, powerFactorData];
     };
-  
-    chart.draw(data, options);
+    function getFuncTepAndCiForPlot(plotNum) {
+        const func = function getPlotTepAndCi(i) {
+            let elecResiTep, elecResiStd, seebeckTep, seebeckStd, showCi;
+            if (plotNum == 1) {
+                elecResiTep = jcApp.plot1ElecResiArray[i];
+                elecResiStd = jcApp.plot1ElecResiStdArray[i];
+                seebeckTep = jcApp.plot1SeebeckArray[i];
+                seebeckStd = jcApp.plot1SeebeckStdArray[i];        
+                showCi = jcApp.showPlot1zTCi;
+            } else if (plotNum == 2) {
+                elecResiTep = jcApp.plot2ElecResiArray[i];
+                elecResiStd = jcApp.plot2ElecResiStdArray[i];
+                seebeckTep = jcApp.plot2SeebeckArray[i];
+                seebeckStd = jcApp.plot2SeebeckStdArray[i];        
+                showCi = jcApp.showPlot2zTCi;
+            } else {
+                throw new Error("Invalid Plot Number!");
+            }
+            const elecResiMin = elecResiTep - 1.96*elecResiStd;
+            const elecResiMax = elecResiTep + 1.96*elecResiStd;
+            const seebeckMin = seebeckTep - 1.96*seebeckStd;
+            const seebeckMax = seebeckTep + 1.96*seebeckStd;    
+            const seebeckSquared = Math.pow(seebeckTep, 2);
+            let seebeckSquaredMin = Math.min(seebeckSquared, Math.pow(seebeckMin, 2), Math.pow(seebeckMax, 2));
+            let seebeckSquaredMax = Math.max(seebeckSquared, Math.pow(seebeckMin, 2), Math.pow(seebeckMax, 2));
+            // the above min/max fails when the sign of Seebeck coefficient changes
+            if ((seebeckMin < 0) && (seebeckMax > 0)) {
+                seebeckSquaredMin = 0;
+            }
+            // Do not draw CI if user wanted
+            if (!showCi) {
+                seebeckSquaredMin = NaN;
+                seebeckSquaredMax = NaN;
+            }
+            return [seebeckSquared/elecResiTep, seebeckSquaredMin/elecResiMax, seebeckSquaredMax/elecResiMin];
+        };
+        return func;
+    };
+
+    jcApp.drawTepChart(jcApp.chartPowerFactor, "Power factor (mW/m/K\u00B2)", 1e3, getPowerFactorData, getFuncTepAndCiForPlot(1), getFuncTepAndCiForPlot(2));
 };
 jcApp.drawFigureOfMeritChart = function() {
-    const chart = jcApp.chartFigureOfMerit;
-    const xLabel = "Temperature (°C)";
-    const yLabel = "Figure of merit zT (1)";  // [1]
-    const yScale = 1;  // [1]
-    const selectedDataName = jcApp.select.value;
-
-    let data = new google.visualization.DataTable();
-    data.addColumn('number', xLabel); 
-    data.addColumn('number', jcApp.dataLegend);
-    data.addColumn('number', jcApp.plot1Legend);
-    data.addColumn({type: 'number', role: 'interval'});
-    data.addColumn({type: 'number', role: 'interval'});
-    data.addColumn('number', jcApp.plot2Legend);
-    data.addColumn({type: 'number', role: 'interval'});
-    data.addColumn({type: 'number', role: 'interval'});
-
-    if(selectedDataName && jcApp.showData) {
-        let tempData = jcApp.rawdata[selectedDataName]["temperature [degC]"];
-        let elecResiData = jcApp.rawdata[selectedDataName]["electrical_resistivity [Ohm m]"];
-        let seebeckData = jcApp.rawdata[selectedDataName]["Seebeck_coefficient [V/K]"];
-        let thrmCondData = jcApp.rawdata[selectedDataName]["thermal_conductivity [W/m/K]"];
-        let z;
-        for(let i=0; i<tempData.length; i++) {
-            z = seebeckData[i]*seebeckData[i]/elecResiData[i]/thrmCondData[i];
-            data.addRow([tempData[i], z*(tempData[i]+273.15)*yScale, NaN, NaN, NaN, NaN, NaN, NaN]);
-        }    
-    }
-    let plot1Tep, plot1Std, plot2Tep, plot2Std, temp;
-    for(let i=0; i<jcApp.nTempNodes; i++) {
-        plot1Tep = plot1Std = plot2Tep = plot2Std = NaN;
-        temp = jcApp.tempArray[i] + 273.15; // absolute temperature (K)
-        if(jcApp.showPlot1) {
-            plot1Tep = jcApp.plot1SeebeckArray[i]*jcApp.plot1SeebeckArray[i]/jcApp.plot1ElecResiArray[i]/jcApp.plot1ThrmCondArray[i]*temp*yScale;
-        }
-        if(jcApp.showPlot2) {
-            plot2Tep = jcApp.plot2SeebeckArray[i]*jcApp.plot2SeebeckArray[i]/jcApp.plot2ElecResiArray[i]/jcApp.plot2ThrmCondArray[i]*temp*yScale;
-        }
-        data.addRow([jcApp.tempArray[i], NaN, 
-            plot1Tep, plot1Tep-1.96*plot1Std, plot1Tep+1.96*plot1Std,
-            plot2Tep, plot2Tep-1.96*plot2Std, plot2Tep+1.96*plot2Std]);
-    }
-
-    let options = {
-      seriesType: 'line',
-      series: {0: {type: 'scatter'}},
-      title: yLabel,
-      titleTextStyle: {bold: true, fontSize: 20,},
-      hAxis: {title: xLabel, titleTextStyle: {italic: false, fontSize: 15,},},
-      vAxis: {title: yLabel, titleTextStyle: {italic: false, fontSize: 15,},},
-      legend: { position: 'bottom', alignment: 'center' },
-      intervals: { style: 'area' },
-      colors: [jcApp.colorRawData, jcApp.colorPlot1, jcApp.colorPlot2],
-      height: jcApp.chartHeight,
+    function getFigureOfMeritData() {
+        const [tempData, elecResiData] = jcApp.getElecResiData();
+        const [, seebeckData] = jcApp.getSeebeckData();
+        const [, thrmCondData] = jcApp.getThrmCondData();
+        const figureOfMeritData = seebeckData.map(function(seebeck, i) {
+            return seebeck*seebeck / (elecResiData[i]*thrmCondData[i]) * (tempData[i] + 273.15); // absolute temperature (K)
+        });
+        return [tempData, figureOfMeritData];
     };
-  
-    chart.draw(data, options);
+    function getFuncTepAndCiForPlot(plotNum) {
+        const func = function getPlotTepAndCi(i) {
+            let elecResiTep, elecResiStd, seebeckTep, seebeckStd, thrmCondTep, thrmCondStd, showCi;
+            if (plotNum == 1) {
+                elecResiTep = jcApp.plot1ElecResiArray[i];
+                elecResiStd = jcApp.plot1ElecResiStdArray[i];
+                seebeckTep = jcApp.plot1SeebeckArray[i];
+                seebeckStd = jcApp.plot1SeebeckStdArray[i];
+                thrmCondTep = jcApp.plot1ThrmCondArray[i];
+                thrmCondStd = jcApp.plot1ThrmCondStdArray[i];    
+                showCi = jcApp.showPlot1zTCi;
+            } else if (plotNum == 2) {
+                elecResiTep = jcApp.plot2ElecResiArray[i];
+                elecResiStd = jcApp.plot2ElecResiStdArray[i];
+                seebeckTep = jcApp.plot2SeebeckArray[i];
+                seebeckStd = jcApp.plot2SeebeckStdArray[i];        
+                thrmCondTep = jcApp.plot2ThrmCondArray[i];
+                thrmCondStd = jcApp.plot2ThrmCondStdArray[i];    
+                showCi = jcApp.showPlot2zTCi;
+            } else {
+                throw new Error("Invalid Plot Number!");
+            }
+            const absTemp = jcApp.tempArray[i] + 273.15;  // absolute temperature (K)
+            const elecResiMin = elecResiTep - 1.96*elecResiStd;
+            const elecResiMax = elecResiTep + 1.96*elecResiStd;
+            const seebeckMin = seebeckTep - 1.96*seebeckStd;
+            const seebeckMax = seebeckTep + 1.96*seebeckStd;    
+            const thrmCondMin = thrmCondTep - 1.96*thrmCondStd;
+            const thrmCondMax = thrmCondTep + 1.96*thrmCondStd;    
+            const seebeckSquared = Math.pow(seebeckTep, 2);
+            let seebeckSquaredMin = Math.min(seebeckSquared, Math.pow(seebeckMin, 2), Math.pow(seebeckMax, 2));
+            let seebeckSquaredMax = Math.max(seebeckSquared, Math.pow(seebeckMin, 2), Math.pow(seebeckMax, 2));
+            // the above min/max fails when the sign of Seebeck coefficient changes
+            if ((seebeckMin < 0) && (seebeckMax > 0)) {
+                seebeckSquaredMin = 0;
+            }
+            // Do not draw CI if user wanted
+            if (!showCi) {
+                seebeckSquaredMin = NaN;
+                seebeckSquaredMax = NaN;
+            }
+            return [seebeckSquared/(elecResiTep*thrmCondTep)*absTemp,
+                seebeckSquaredMin/(elecResiMax*thrmCondMax)*absTemp,
+                seebeckSquaredMax/(elecResiMin*thrmCondMin)*absTemp];
+        }
+        return func;
+    };
+
+    jcApp.drawTepChart(jcApp.chartFigureOfMerit, "Figure of merit zT (1)", 1, getFigureOfMeritData, getFuncTepAndCiForPlot(1), getFuncTepAndCiForPlot(2));
 };
 
 
@@ -625,7 +583,6 @@ jcApp.initMeanLann = function() {
     );
     jcApp.meanLann = new BiTeMeanLann(embeddingNet, meanDictionaryNet);
 }
-
 jcApp.initLann = function() {
     let jsonObj = jcApp.jsonObjBiTeLann;
     let embeddingNet = new FullyConnectedNeuralNetwork(5,
