@@ -185,6 +185,9 @@ form .param-long-label {
     background-color: #808080;
     cursor: default;
 }
+.selection-button:active {
+    background-color: var(--dark-accent-color);
+}
 
 @media (max-width: 768px) {
     .title h1 {
