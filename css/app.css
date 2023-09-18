@@ -44,10 +44,6 @@
     margin-left: 20px;
     margin-right: 20px;
 }
-.section .container article.tep-table{
-    flex: 0 0 30%;
-    margin: 10px;
-}
 .section .chart-container {
     display: flex;
     flex-wrap: wrap;
@@ -89,21 +85,11 @@
     margin-bottom: 10px;
 }
 
-
-.table {
-    margin-left: 0px;
-    margin-right: 0px;
-}
-.table-title {
-    font-size: 1.2rem;
-    text-align: center;
-}
 .option-group-title {
     font-size: 1.2rem;
     font-weight: bold;
     text-align: center;
 }
-
 .paragraph {
     font-size: 1.1rem;
     margin-left: 30px;
@@ -118,16 +104,12 @@
     margin-left: 5px;
     margin-right: 5px;
 }
-.message-container {
-    text-align: center;
-    font-size: 1.5rem;
-    color: #DC143C;
-    margin: 10px;
-}
 
 .option-group {
-    flex: 0 0 30%;
-    margin: 10px;
+    flex: 0 0 28%;
+    margin-left: 5px;
+    margin-right: 5px;
+    margin-bottom: 20px;
     align-items: center;
 }
 .option-group form{
@@ -145,7 +127,7 @@
 }
 .option-group input{
     font-size: 1.1rem;
-};
+}
 
 .chart-container {
     display: flex;
@@ -168,13 +150,13 @@
 
 form .param-label {
     display: inline-block;
-    width: 150px;
+    width: 100px;
     text-align: right;
     vertical-align: bottom;
-    margin-right: 5px;;
+    margin-right: 5px;
 }
 form .param-input {
-    width: 50px;
+    width: 100px;
 }
 form .param-unit-label {
     margin-left: 5px;
@@ -211,6 +193,14 @@ form .param-long-label {
     .apps .text p {
         display: none;
     }
+    .selection-button:hover {
+        background-color: var(--accent-color);
+        cursor: pointer;
+    }
+    .option-group {
+        flex: 0 0 80%;
+    }    
+    .footer .footer-keri-info { padding-top: 20px;}
 }
 
 @media print {
@@ -220,9 +210,6 @@ form .param-long-label {
     .header { display: none; }
     .input-tep { display: none; }
     .tep-curve .paragraph { display: none; }
-    .select-sim-param .paragraph { display: none; }
-    .sim-result .paragraph { display: none; }
-    #sim-task-message { display: none; }
     .button-container { display: none; }
     .footer .footer-keri-info { padding-top: 20px;}
     .chart-container article.chart {
